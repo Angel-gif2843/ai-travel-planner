@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Travel Planner</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Volkhov:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; transition: all 0.2s; }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 40px 20px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; background: linear-gradient(rgba(15,23,42,0.7), rgba(11,15,25,0.98)), url('https://images.unsplash.com/photo-1506929562872-bb421503ef21?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed; background-size: cover; color: #fff; }
+        h1 { font-family: 'Volkhov', serif; font-size: 2.8rem; margin: 0 0 10px 0; }
+        .subtitle { color: #cbd5e1; margin: 0 0 30px 0; text-align: center; max-width: 500px; }
+        .card, .output-box { background: rgba(30,41,59,0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 30px; width: 100%; max-width: 540px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); }
+        .output-box { display: none; max-width: 850px; margin-top: 10px; }
+        form { display: flex; flex-direction: column; gap: 16px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        label { font-weight: 600; color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-box { position: relative; display: flex; align-items: center; margin-top: 5px; }
+        .input-box i { position: absolute; left: 14px; color: #38bdf8; }
+        input, select { width: 100%; padding: 12px 12px 12px 40px; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-family: inherit; font-size: 0.95rem; }
+        input:focus, select:focus { outline: none; border-color: #38bdf8; background: rgba(15,23,42,0.8); }
+        .btn { background: linear-gradient(135deg, #38bdf8, #0284c7); color: #0f172a; border: none; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+        .output-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; margin-bottom: 25px; gap: 15px; flex-wrap: wrap; }
+        .loader { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(11,15,25,0.95); z-index: 1000; justify-content: center; align-items: center; flex-direction: column; gap: 15px; }
+        .spinner { width: 45px; height: 45px; border: 4px solid rgba(56,189,248,0.1); border-top-color: #38bdf8; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* New structured layout classes for cleaner JS generation */
+        .day-card { margin-bottom: 20px; background: rgba(15,23,42,0.4); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06); }
+        .day-title { color: #38bdf8; margin: 0 0 10px 0; font-size: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; font-family: 'Volkhov', serif; }
+        .theme-text { margin: 0 0 12px 0; font-size: 1.15rem; font-weight: 600; color: #38bdf8; }
+        .meta-card { margin-bottom: 15px; background: rgba(56,189,248,0.06); padding: 14px; border-radius: 10px; border: 1px solid rgba(56,189,248,0.15); }
+        .section-label { margin: 4px 0 2px 0; font-weight: 600; color: #94a3b8; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        .activity-list { margin: 0; padding-left: 20px; color: #e2e8f0; }
+        .activity-list li { margin-top: 6px; }
+    </style>
+</head>
+<body>
+
+    <div id="inputView" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <h1>AI Travel Planner</h1>
+        <p class="subtitle">Enter your details below to unlock an exclusive, AI-optimized travel schedule.</p>
+        <div class="card">
+            <form id="travelForm">
+                <div>
+                    <label>Where to go?</label>
+                    <div class="input-box"><i class="fa-solid fa-map-pin"></i><input type="text" id="destination" placeholder="Destination" required></div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Duration</label>
+                        <div class="input-box"><i class="fa-solid fa-clock"></i><input type="number" id="days" min="1" placeholder="Days" required></div>
+                    </div>
+                    <div>
+                        <label>Budget Cap</label>
+                        <div class="input-box"><i class="fa-solid fa-wallet"></i><input type="text" id="budget" placeholder="Budget Amount" required></div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <label>Travelers</label>
+                        <div class="input-box"><i class="fa-solid fa-user-group"></i><input type="number" id="travelers" min="1" placeholder="Count" required></div>
+                    </div>
+                    <div>
+                        <label>Group Type</label>
+                        <div class="input-box"><i class="fa-solid fa-user-astronaut"></i>
+                            <select id="travel_type"><option value="Solo">Solo</option><option value="Family">Family</option><option value="Friends">Friends</option><option value="Couple">Couple</option></select>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label>Primary Interest</label>
+                    <div class="input-box"><i class="fa-solid fa-camera-retro"></i>
+                        <select id="interests"><option value="Nature">Nature & Scenic</option><option value="Adventure">Adventure & Sports</option><option value="Food">Local Food & Dining</option><option value="Shopping">Shopping Markets</option><option value="Historical">Historical Landmarks</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Travel Plan</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="output-box" id="outputView">
+        <div class="output-header">
+            <h2 style="margin:0; font-family:'Volkhov', serif; font-size:1.8rem; display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-compass" style="color:#38bdf8;"></i> Custom Travel Plan Output</h2>
+            <button onclick="window.location.reload()" class="btn" style="margin:0; width:auto; padding:10px 20px; font-size:0.9rem; background:rgba(255,255,255,0.1); color:#fff; border:1px solid rgba(255,255,255,0.15);"><i class="fa-solid fa-arrow-left"></i> Start Over</button>
+        </div>
+        <div id="planContent" style="color:#f1f5f9; line-height:1.7; font-size:1.05rem;"></div>
+    </div>
+
+    <div class="loader" id="loader"><div class="spinner"></div><p style="color:#cbd5e1; font-weight:500;">Crafting your custom plan...</p></div>
+
+    <script>
+        document.getElementById('travelForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            document.getElementById('loader').style.display = 'flex';
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        destination: document.getElementById('destination').value,
+                        days: document.getElementById('days').value,
+                        budget: document.getElementById('budget').value,
+                        travelers: document.getElementById('travelers').value,
+                        travel_type: document.getElementById('travel_type').value,
+                        interests: document.getElementById('interests').value
+                    })
+                });
+
+                const data = await response.json();
+                document.getElementById('loader').style.display = 'none';
+
+                const res = data.plan || data.travel_plan || data.response || data.itinerary || data.itinerary_text || data;
+                let html = '';
+
+                // Clean bracket artifacts and escape structures
+                const clean = txt => !txt ? '' : String(txt).replace(/\\n/g, '<br>').replace(/[\{\}\"\[\]]/g, '').trim();
+
+                // Format a structured daily plan block
+                function renderDayCard(val, index) {
+                    let title = `DAY ${parseInt(index) + 1}`;
+                    let body = '';
+
+                    if (typeof val === 'object' && val !== null) {
+                        if (val.day) title = `DAY ${val.day}`;
+                        if (val.theme) body += `<p class="theme-text"><i class="fa-solid fa-star"></i> ${clean(val.theme)}</p>`;
+                        if (val.activities) {
+                            body += `<p class="section-label">Planned Activities:</p><ul class="activity-list">`;
+                            let list = Array.isArray(val.activities) ? val.activities : String(val.activities).split(/,(?![^\(]*\))/);
+                            list.forEach(item => { body += `<li>${clean(item)}</li>`; });
+                            body += `</ul>`;
+                        }
+                    } else {
+                        body = `<p>${clean(val)}</p>`;
+                    }
+
+                    return `<div class="day-card"><h4 class="day-title">${title}</h4><div>${body}</div></div>`;
+                }
+
+                // Main response parser loop
+                if (typeof res === 'object' && res !== null) {
+                    for (let [key, value] of Object.entries(res)) {
+                        let cleanKey = key.replace(/_/g, ' ').toUpperCase();
+                        
+                        if (typeof value === 'object' && value !== null) {
+                            let cards = '';
+                            for (let [cKey, cValue] of Object.entries(value)) {
+                                cards += renderDayCard(cValue, cKey);
+                            }
+                            html += cleanKey === 'ITINERARY' ? cards : `<div class="day-card"><h3 class="day-title">${cleanKey}</h3><div>${cards}</div></div>`;
+                        } else {
+                            html += `<div class="meta-card"><strong style="color:#38bdf8;">${cleanKey}:</strong> ${clean(value)}</div>`;
+                        }
+                    }
+                } else {
+                    html = `<div class="day-card">${clean(res)}</div>`;
+                }
+
+                document.getElementById('inputView').style.display = 'none';
+                document.getElementById('planContent').innerHTML = html;
+                document.getElementById('outputView').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (err) {
+                document.getElementById('loader').style.display = 'none';
+                alert("An error occurred while connecting to the server.");
+            }
+        });
+    </script>
+</body>
+</html>
